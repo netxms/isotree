@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.12.4)
+cmake_minimum_required (VERSION 3.10.2)
 project (isotree VERSION 0.6.1)
 set(CMAKE_BUILD_TYPE Release)
 
@@ -28,14 +28,14 @@ target_include_directories(isotree PRIVATE ${PROJECT_SOURCE_DIR}/src)
 set(HEADER_FILES "${PROJECT_SOURCE_DIR}/include/isotree.hpp"
                  "${PROJECT_SOURCE_DIR}/include/isotree_oop.hpp"
                  "${PROJECT_SOURCE_DIR}/include/isotree_c.h")
-set_target_properties(isotree PROPERTIES PUBLIC_HEADER "${HEADER_FILES}" SOVERSION 0 VERSION ${PROJECT_VERSION})
-add_compile_definitions(ISOTREE_COMPILE_TIME)
+set_target_properties(isotree PROPERTIES PUBLIC_HEADER "${HEADER_FILES}")
+add_definitions(-DISOTREE_COMPILE_TIME)
 
 ## set to OFF to use the system's default RNG engine
 option(USE_XOSHIRO "Use the xoshiro RNG family" ON)
 if (USE_XOSHIRO)
     message(STATUS "Using the Xoshiro random engine family")
-    add_compile_definitions(_USE_XOSHIRO)
+    add_definitions(-D_USE_XOSHIRO)
 else()
     message(STATUS "Using the compiler's default random engine")
 endif()
@@ -46,7 +46,7 @@ endif()
 option(NO_LONG_DOUBLE "Avoid adding support for 'long double' type" OFF)
 if (NO_LONG_DOUBLE)
     message(STATUS "Avoid adding support for 'long double' type.")
-    add_compile_definitions(NO_LONG_DOUBLE)
+    add_definitions(-DNO_LONG_DOUBLE)
 endif()
 
 ## set to ON to compile for only 'double' and 'int' types
@@ -54,7 +54,7 @@ endif()
 option(NO_TEMPLATED_VERSIONS "Don't create multiple templated versions for different data types" OFF)
 if (NO_TEMPLATED_VERSIONS)
     message(STATUS "Building with support for only 'double' and 'int' types.")
-    add_compile_definitions(NO_TEMPLATED_VERSIONS)
+    add_definitions(-DNO_TEMPLATED_VERSIONS)
 endif()
 
 ## set to OFF to export all symbols
@@ -80,7 +80,7 @@ if (HIDE_INTERNAL_SYMBOLS AND NOT WIN32)
     set(CMAKE_REQUIRED_FLAGS ${OLD_FLAGS})
     if (SUPPORTS_FVISIBILITY_HIDDEN)
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fvisibility=hidden")
-        add_compile_definitions(EXPLICITLTY_EXPORT_SYMBOLS)
+	add_definitions(-DEXPLICITLTY_EXPORT_SYMBOLS)
     else()
         message(STATUS "Hidden symbols visibility not supported by the compiler, will export all symbols.")
     endif()
@@ -109,13 +109,13 @@ check_cxx_source_compiles(
     HAS_ROBIN_MAP
 )
 if (HAS_ROBIN_MAP)
-    add_compile_definitions(_USE_ROBIN_MAP)
+    add_definitions(-D_USE_ROBIN_MAP)
 else()
     # if it's not under /src, check if there's a system install
     find_package(tsl-robin-map)
     if (tsl-robin-map_FOUND)
         target_link_libraries(isotree PRIVATE tsl::robin_map)
-        add_compile_definitions(_USE_SYSTEM_ROBIN)
+	add_definitions(-D_USE_SYSTEM_ROBIN)
     else()
         message(WARNING "Robin-Map Headers not found - will use STL hashmaps which are slower.")
     endif()
@@ -124,7 +124,7 @@ endif()
 # For handling large files with MinGW
 if (WIN32)
     if (CMAKE_SIZEOF_VOID_P GREATER_EQUAL 8 AND (MSYS OR MINGW OR GCC))
-        add_compile_definitions(_FILE_OFFSET_BITS=64)
+        add_definitions(-D_FILE_OFFSET_BITS=64)
     endif()
 endif()
 
@@ -141,7 +141,7 @@ check_cxx_source_compiles(
     SUPPORTS_RESTRICT
 )
 if (SUPPORTS_RESTRICT)
-    add_compile_definitions(SUPPORTS_RESTRICT=1)
+    add_definitions(-DSUPPORTS_RESTRICT=1)
 endif()
 
 if (MSVC)

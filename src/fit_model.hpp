@@ -2043,6 +2043,33 @@ void fit_itree(std::vector<IsoTree>    *tree_root,
         if (workspace.buffer_chr.size() < min_size_chr)
             workspace.buffer_chr.resize(min_size_chr);
 
+        /* additional buffers for split criterion - avoids per-call heap allocations */
+        if (input_data.ncols_categ &&
+            (gain || model_params.weigh_by_kurt || model_params.prob_pick_col_by_kurt))
+        {
+            size_t min_size_ldbl = (size_t)input_data.max_categ + 1;
+            if (workspace.buffer_ldbl.size() < min_size_ldbl)
+                workspace.buffer_ldbl.resize(min_size_ldbl);
+        }
+
+        if (model_params.prob_pick_by_full_gain > 0)
+        {
+            size_t min_size_dbl2 = model_params.sample_size + mult2(input_data.ncols_numeric);
+            if (workspace.buffer_dbl2.size() < min_size_dbl2)
+                workspace.buffer_dbl2.resize(min_size_dbl2);
+
+            size_t min_size_szt2 = model_params.sample_size;
+            if (workspace.buffer_szt2.size() < min_size_szt2)
+                workspace.buffer_szt2.resize(min_size_szt2);
+        }
+
+        if (input_data.Xc_indptr != NULL && gain)
+        {
+            size_t min_size_dbl2 = model_params.sample_size + mult2(input_data.ncols_numeric);
+            if (workspace.buffer_dbl2.size() < min_size_dbl2)
+                workspace.buffer_dbl2.resize(min_size_dbl2);
+        }
+
         /* for guided column choice, need to also remember the best split so far */
         if (
             model_params.cat_split_type == SubSet &&
@@ -2172,7 +2199,8 @@ void fit_itree(std::vector<IsoTree>    *tree_root,
                                                input_data.categ_data + col * input_data.nrows, input_data.ncat[col],
                                                workspace.buffer_dbl.data(),
                                                model_params.missing_action, model_params.cat_split_type, workspace.rnd_generator,
-                                               workspace.weights_arr);
+                                               workspace.weights_arr,
+                                               workspace.buffer_ldbl.data());
                 else
                     kurt_weights[col + input_data.ncols_numeric] =
                         calc_kurtosis_weighted<decltype(workspace.weights_map), ldouble_safe>(
@@ -2180,7 +2208,8 @@ void fit_itree(std::vector<IsoTree>    *tree_root,
                                                input_data.categ_data + col * input_data.nrows, input_data.ncat[col],
                                                workspace.buffer_dbl.data(),
                                                model_params.missing_action, model_params.cat_split_type, workspace.rnd_generator,
-                                               workspace.weights_map);
+                                               workspace.weights_map,
+                                               workspace.buffer_ldbl.data());
             }
 
             for (auto &w : kurt_weights) w = (w == -HUGE_VAL)? 0. : std::fmax(1e-8, -1. + w);
@@ -2292,7 +2321,8 @@ void fit_itree(std::vector<IsoTree>    *tree_root,
                                                    input_data.ncat[col - input_data.ncols_numeric],
                                                    workspace.buffer_dbl.data(),
                                                    model_params.missing_action, model_params.cat_split_type, workspace.rnd_generator,
-                                                   workspace.weights_arr);
+                                                   workspace.weights_arr,
+                                                   workspace.buffer_ldbl.data());
                     else
                         kurt_weights[col] =
                             calc_kurtosis_weighted<decltype(workspace.weights_map), ldouble_safe>(
@@ -2301,7 +2331,8 @@ void fit_itree(std::vector<IsoTree>    *tree_root,
                                                    input_data.ncat[col - input_data.ncols_numeric],
                                                    workspace.buffer_dbl.data(),
                                                    model_params.missing_action, model_params.cat_split_type, workspace.rnd_generator,
-                                                   workspace.weights_map);
+                                                   workspace.weights_map,
+                                                   workspace.buffer_ldbl.data());
                 }
 
                 /* Note to self: don't move this  to outside of the braces, as it needs to assign a weight

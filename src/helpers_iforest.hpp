@@ -351,11 +351,14 @@ std::vector<double> calc_kurtosis_all_data(InputData &input_data, ModelParams &m
 {
     std::unique_ptr<double[]> buffer_double;
     std::unique_ptr<size_t[]> buffer_size_t;
+    std::unique_ptr<ldouble_safe[]> buffer_ldbl;
     if (input_data.ncols_categ)
     {
         buffer_double = std::unique_ptr<double[]>(new double[input_data.max_categ]);
         if (!(input_data.sample_weights != NULL && !input_data.weight_as_sample))
             buffer_size_t = std::unique_ptr<size_t[]>(new size_t[input_data.max_categ + 1]);
+        else
+            buffer_ldbl = std::unique_ptr<ldouble_safe[]>(new ldouble_safe[input_data.max_categ + 1]);
     }
 
 
@@ -432,7 +435,8 @@ std::vector<double> calc_kurtosis_all_data(InputData &input_data, ModelParams &m
                                                  input_data.ncat[col - input_data.ncols_numeric],
                                                  buffer_double.get(),
                                                  model_params.missing_action, model_params.cat_split_type,
-                                                 rnd_generator, input_data.sample_weights);
+                                                 rnd_generator, input_data.sample_weights,
+                                                 buffer_ldbl.get());
             }
         }
     }
@@ -777,7 +781,8 @@ void calc_kurt_all_cols(InputData &input_data, WorkerMemory &workspace, ModelPar
                                            input_data.ncat[col],
                                            workspace.buffer_dbl.data(),
                                            model_params.missing_action, model_params.cat_split_type,
-                                           workspace.rnd_generator, workspace.weights_arr);
+                                           workspace.rnd_generator, workspace.weights_arr,
+                                           workspace.buffer_ldbl.data());
             }
 
             else
@@ -789,7 +794,8 @@ void calc_kurt_all_cols(InputData &input_data, WorkerMemory &workspace, ModelPar
                                            input_data.ncat[col],
                                            workspace.buffer_dbl.data(),
                                            model_params.missing_action, model_params.cat_split_type,
-                                           workspace.rnd_generator, workspace.weights_map);
+                                           workspace.rnd_generator, workspace.weights_map,
+                                           workspace.buffer_ldbl.data());
             }
         }
 

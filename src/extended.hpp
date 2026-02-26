@@ -389,7 +389,9 @@ void split_hplane_recursive(std::vector<IsoHPlane>   &hplanes,
                                                        input_data.ncols_numeric,
                                                        input_data.Xr.data(),
                                                        input_data.Xr_ind.data(),
-                                                       input_data.Xr_indptr.data());
+                                                       input_data.Xr_indptr.data(),
+                                                       workspace.buffer_dbl2.data(),
+                                                       workspace.buffer_szt2.data());
             else if (!workspace.weights_arr.empty())
                 workspace.this_gain = eval_guided_crit_weighted<ldouble_safe>(
                                                                 workspace.comb_val.data(), workspace.end - workspace.st + 1,
@@ -405,7 +407,9 @@ void split_hplane_recursive(std::vector<IsoHPlane>   &hplanes,
                                                                 input_data.ncols_numeric,
                                                                 input_data.Xr.data(),
                                                                 input_data.Xr_ind.data(),
-                                                                input_data.Xr_indptr.data());
+                                                                input_data.Xr_indptr.data(),
+                                                                workspace.buffer_dbl2.data(),
+                                                                workspace.buffer_szt2.data());
             else
                 workspace.this_gain = eval_guided_crit_weighted<ldouble_safe>(
                                                                 workspace.comb_val.data(), workspace.end - workspace.st + 1,
@@ -421,7 +425,9 @@ void split_hplane_recursive(std::vector<IsoHPlane>   &hplanes,
                                                                 input_data.ncols_numeric,
                                                                 input_data.Xr.data(),
                                                                 input_data.Xr_ind.data(),
-                                                                input_data.Xr_indptr.data());
+                                                                input_data.Xr_indptr.data(),
+                                                                workspace.buffer_dbl2.data(),
+                                                                workspace.buffer_szt2.data());
         }
         
         /* pass to the output object */

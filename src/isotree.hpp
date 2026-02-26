@@ -812,6 +812,9 @@ struct WorkerMemory {
     std::vector<double>  buffer_dbl;
     std::vector<size_t>  buffer_szt;
     std::vector<signed char> buffer_chr;
+    std::vector<ldouble_safe> buffer_ldbl;   /* for categorical count buffers (ncat+1) */
+    std::vector<double>       buffer_dbl2;   /* for FullGain temp_buffer, sparse weight buffer */
+    std::vector<size_t>       buffer_szt2;   /* for FullGain argsorted indices */
     double               prob_split_type;
     ColCriterion         col_criterion;
     GainCriterion        criterion;
@@ -1630,17 +1633,17 @@ template <class ldouble_safe>
 double calc_kurtosis(size_t nrows, int x[], int ncat, size_t buffer_cnt[], double buffer_prob[],
                      MissingAction missing_action, CategSplit cat_split_type, RNG_engine &rnd_generator);
 template <class mapping, class ldouble_safe>
-double calc_kurtosis_weighted_internal(std::vector<ldouble_safe> &buffer_cnt, int x[], int ncat,
+double calc_kurtosis_weighted_internal(ldouble_safe *restrict buffer_cnt, int x[], int ncat,
                                        double buffer_prob[], MissingAction missing_action, CategSplit cat_split_type,
                                        RNG_engine &rnd_generator, mapping &restrict w);
 template <class mapping, class ldouble_safe>
 double calc_kurtosis_weighted(size_t ix_arr[], size_t st, size_t end, int x[], int ncat, double buffer_prob[],
                               MissingAction missing_action, CategSplit cat_split_type, RNG_engine &rnd_generator,
-                              mapping &restrict w);
+                              mapping &restrict w, ldouble_safe *restrict buffer_cnt);
 template <class real_t, class ldouble_safe>
 double calc_kurtosis_weighted(size_t nrows, int x[], int ncat, double *restrict buffer_prob,
                               MissingAction missing_action, CategSplit cat_split_type,
-                              RNG_engine &rnd_generator, real_t *restrict w);
+                              RNG_engine &rnd_generator, real_t *restrict w, ldouble_safe *restrict buffer_cnt);
 template <class int_t, class ldouble_safe>
 double expected_sd_cat(double p[], size_t n, int_t pos[]);
 template <class number, class int_t, class ldouble_safe>
@@ -1755,7 +1758,8 @@ template <class mapping, class int_t, class ldouble_safe>
 double find_split_dens_longform_weighted(int *restrict x, int ncat, size_t *restrict ix_arr, size_t st, size_t end,
                                          CategSplit cat_split_type, MissingAction missing_action,
                                          int &restrict chosen_cat, signed char *restrict split_categ, int *restrict saved_cat_mode,
-                                         int_t *restrict buffer_indices, mapping &restrict w);
+                                         int_t *restrict buffer_indices, mapping &restrict w,
+                                         ldouble_safe *restrict buffer_cnt);
 template <class ldouble_safe>
 double eval_guided_crit(double *restrict x, size_t n, GainCriterion criterion,
                         double min_gain, bool as_relative_gain, double *restrict buffer_sd,
@@ -1763,7 +1767,8 @@ double eval_guided_crit(double *restrict x, size_t n, GainCriterion criterion,
                         size_t *restrict ix_arr_plus_st,
                         size_t *restrict cols_use, size_t ncols_use, bool force_cols_use,
                         double *restrict X_row_major, size_t ncols,
-                        double *restrict Xr, size_t *restrict Xr_ind, size_t *restrict Xr_indptr);
+                        double *restrict Xr, size_t *restrict Xr_ind, size_t *restrict Xr_indptr,
+                        double *restrict buffer_fg, size_t *restrict buffer_fg_szt);
 template <class ldouble_safe>
 double eval_guided_crit_weighted(double *restrict x, size_t n, GainCriterion criterion,
                                  double min_gain, bool as_relative_gain, double *restrict buffer_sd,
@@ -1772,7 +1777,8 @@ double eval_guided_crit_weighted(double *restrict x, size_t n, GainCriterion cri
                                  size_t *restrict ix_arr_plus_st,
                                  size_t *restrict cols_use, size_t ncols_use, bool force_cols_use,
                                  double *restrict X_row_major, size_t ncols,
-                                 double *restrict Xr, size_t *restrict Xr_ind, size_t *restrict Xr_indptr);
+                                 double *restrict Xr, size_t *restrict Xr_ind, size_t *restrict Xr_indptr,
+                                 double *restrict buffer_fg, size_t *restrict buffer_fg_szt);
 template <class real_t_, class ldouble_safe>
 double eval_guided_crit(size_t *restrict ix_arr, size_t st, size_t end, real_t_ *restrict x,
                         double *restrict buffer_sd, bool as_relative_gain,
@@ -1781,7 +1787,8 @@ double eval_guided_crit(size_t *restrict ix_arr, size_t st, size_t end, real_t_ 
                         GainCriterion criterion, double min_gain, MissingAction missing_action,
                         size_t *restrict cols_use, size_t ncols_use, bool force_cols_use,
                         double *restrict X_row_major, size_t ncols,
-                        double *restrict Xr, size_t *restrict Xr_ind, size_t *restrict Xr_indptr);
+                        double *restrict Xr, size_t *restrict Xr_ind, size_t *restrict Xr_indptr,
+                        double *restrict buffer_fg);
 template <class real_t_, class mapping, class ldouble_safe>
 double eval_guided_crit_weighted(size_t *restrict ix_arr, size_t st, size_t end, real_t_ *restrict x,
                                  double *restrict buffer_sd, bool as_relative_gain,
@@ -1791,7 +1798,8 @@ double eval_guided_crit_weighted(size_t *restrict ix_arr, size_t st, size_t end,
                                  size_t *restrict cols_use, size_t ncols_use, bool force_cols_use,
                                  double *restrict X_row_major, size_t ncols,
                                  double *restrict Xr, size_t *restrict Xr_ind, size_t *restrict Xr_indptr,
-                                 mapping &restrict w);
+                                 mapping &restrict w,
+                                 double *restrict buffer_fg);
 template <class real_t_, class sparse_ix, class ldouble_safe>
 double eval_guided_crit(size_t ix_arr[], size_t st, size_t end,
                         size_t col_num, real_t_ Xc[], sparse_ix Xc_ind[], sparse_ix Xc_indptr[],
@@ -1801,7 +1809,8 @@ double eval_guided_crit(size_t ix_arr[], size_t st, size_t end,
                         GainCriterion criterion, double min_gain, MissingAction missing_action,
                         size_t *restrict cols_use, size_t ncols_use, bool force_cols_use,
                         double *restrict X_row_major, size_t ncols,
-                        double *restrict Xr, size_t *restrict Xr_ind, size_t *restrict Xr_indptr);
+                        double *restrict Xr, size_t *restrict Xr_ind, size_t *restrict Xr_indptr,
+                        double *restrict buffer_fg);
 template <class real_t_, class sparse_ix, class mapping, class ldouble_safe>
 double eval_guided_crit_weighted(size_t ix_arr[], size_t st, size_t end,
                                  size_t col_num, real_t_ Xc[], sparse_ix Xc_ind[], sparse_ix Xc_indptr[],
@@ -1812,7 +1821,8 @@ double eval_guided_crit_weighted(size_t ix_arr[], size_t st, size_t end,
                                  size_t *restrict cols_use, size_t ncols_use, bool force_cols_use,
                                  double *restrict X_row_major, size_t ncols,
                                  double *restrict Xr, size_t *restrict Xr_ind, size_t *restrict Xr_indptr,
-                                 mapping &restrict w);
+                                 mapping &restrict w,
+                                 double *restrict buffer_w);
 template <class ldouble_safe>
 double eval_guided_crit(size_t *restrict ix_arr, size_t st, size_t end, int *restrict x, int ncat,
                         int *restrict saved_cat_mode,
@@ -1827,7 +1837,8 @@ double eval_guided_crit_weighted(size_t *restrict ix_arr, size_t st, size_t end,
                                  int &restrict chosen_cat, signed char *restrict split_categ, signed char *restrict buffer_split,
                                  GainCriterion criterion, double min_gain, bool all_perm,
                                  MissingAction missing_action, CategSplit cat_split_type,
-                                 mapping &restrict w);
+                                 mapping &restrict w,
+                                 ldouble_safe *restrict buffer_cnt);
 
 /* indexer.cpp */
 template <class Tree>

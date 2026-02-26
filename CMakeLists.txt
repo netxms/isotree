@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.10.2)
-project (isotree VERSION 0.6.1)
+project (isotree VERSION 0.6.2)
 set(CMAKE_BUILD_TYPE Release)
 
 if ("${CMAKE_CXX_COMPILE_FEATURES}" MATCHES "cxx_std_17")

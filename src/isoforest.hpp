@@ -455,7 +455,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                                    input_data.ncols_numeric,
                                                                    input_data.Xr.data(),
                                                                    input_data.Xr_ind.data(),
-                                                                   input_data.Xr_indptr.data());
+                                                                   input_data.Xr_indptr.data(),
+                                                                   workspace.buffer_dbl2.data());
                         else if (!workspace.weights_arr.empty())
                             workspace.this_gain = eval_guided_crit_weighted<typename std::remove_pointer<decltype(input_data.numeric_data)>::type,
                                                                             decltype(workspace.weights_arr), ldouble_safe>(
@@ -476,7 +477,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                                             input_data.Xr.data(),
                                                                             input_data.Xr_ind.data(),
                                                                             input_data.Xr_indptr.data(),
-                                                                            workspace.weights_arr);
+                                                                            workspace.weights_arr,
+                                                                            workspace.buffer_dbl2.data());
                         else
                             workspace.this_gain = eval_guided_crit_weighted<typename std::remove_pointer<decltype(input_data.numeric_data)>::type,
                                                                             decltype(workspace.weights_map), ldouble_safe>(
@@ -497,7 +499,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                                             input_data.Xr.data(),
                                                                             input_data.Xr_ind.data(),
                                                                             input_data.Xr_indptr.data(),
-                                                                            workspace.weights_map);
+                                                                            workspace.weights_map,
+                                                                            workspace.buffer_dbl2.data());
                     }
 
                     else
@@ -519,7 +522,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                                    input_data.ncols_numeric,
                                                                    input_data.Xr.data(),
                                                                    input_data.Xr_ind.data(),
-                                                                   input_data.Xr_indptr.data());
+                                                                   input_data.Xr_indptr.data(),
+                                                                   workspace.buffer_dbl2.data());
                         else if (!workspace.weights_arr.empty())
                             workspace.this_gain = eval_guided_crit_weighted<typename std::remove_pointer<decltype(input_data.Xc)>::type,
                                                                             typename std::remove_pointer<decltype(input_data.Xc_indptr)>::type,
@@ -538,7 +542,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                                             input_data.Xr.data(),
                                                                             input_data.Xr_ind.data(),
                                                                             input_data.Xr_indptr.data(),
-                                                                            workspace.weights_arr);
+                                                                            workspace.weights_arr,
+                                                                            workspace.buffer_dbl2.data());
                         else
                             workspace.this_gain = eval_guided_crit_weighted<typename std::remove_pointer<decltype(input_data.Xc)>::type,
                                                                             typename std::remove_pointer<decltype(input_data.Xc_indptr)>::type,
@@ -558,7 +563,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                                             input_data.Xr.data(),
                                                                             input_data.Xr_ind.data(),
                                                                             input_data.Xr_indptr.data(),
-                                                                            workspace.weights_map);
+                                                                            workspace.weights_map,
+                                                                            workspace.buffer_dbl2.data());
                     }
                 }
 
@@ -584,7 +590,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                                         workspace.buffer_dbl.data(), workspace.this_categ, workspace.this_split_categ.data(),
                                                                         workspace.buffer_chr.data(), workspace.criterion, model_params.min_gain,
                                                                         model_params.all_perm, model_params.missing_action, model_params.cat_split_type,
-                                                                        workspace.weights_arr);
+                                                                        workspace.weights_arr,
+                                                                        workspace.buffer_ldbl.data());
                     else
                         workspace.this_gain = eval_guided_crit_weighted<decltype(workspace.weights_map), ldouble_safe>(
                                                                         workspace.ix_arr.data(), workspace.st, workspace.end,
@@ -595,7 +602,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                                         workspace.buffer_dbl.data(), workspace.this_categ, workspace.this_split_categ.data(),
                                                                         workspace.buffer_chr.data(), workspace.criterion, model_params.min_gain,
                                                                         model_params.all_perm, model_params.missing_action, model_params.cat_split_type,
-                                                                        workspace.weights_map);
+                                                                        workspace.weights_map,
+                                                                        workspace.buffer_ldbl.data());
                 }
 
                 if (std::isnan(workspace.this_gain) || workspace.this_gain <= -HUGE_VAL)
@@ -733,7 +741,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                  input_data.ncols_numeric,
                                                  input_data.Xr.data(),
                                                  input_data.Xr_ind.data(),
-                                                 input_data.Xr_indptr.data());
+                                                 input_data.Xr_indptr.data(),
+                                                 workspace.buffer_dbl2.data());
                         else if (!workspace.weights_arr.empty())
                             workspace.this_gain =
                                 eval_guided_crit_weighted<typename std::remove_pointer<decltype(input_data.numeric_data)>::type, decltype(workspace.weights_arr), ldouble_safe>(
@@ -754,7 +763,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                           input_data.Xr.data(),
                                                           input_data.Xr_ind.data(),
                                                           input_data.Xr_indptr.data(),
-                                                          workspace.weights_arr);
+                                                          workspace.weights_arr,
+                                                          workspace.buffer_dbl2.data());
                         else
                             workspace.this_gain =
                                 eval_guided_crit_weighted<typename std::remove_pointer<decltype(input_data.numeric_data)>::type, decltype(workspace.weights_map), ldouble_safe>(
@@ -775,7 +785,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                           input_data.Xr.data(),
                                                           input_data.Xr_ind.data(),
                                                           input_data.Xr_indptr.data(),
-                                                          workspace.weights_map);
+                                                          workspace.weights_map,
+                                                          workspace.buffer_dbl2.data());
 
                         if (std::isnan(workspace.this_gain) || workspace.this_gain <= -HUGE_VAL)
                             goto terminal_statistics;
@@ -791,7 +802,7 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                 workspace.st_NA = workspace.split_ix + 1;
                                 workspace.end_NA = workspace.st_NA;
                             }
-                            
+
                             workspace.split_ix++;
                             if (model_params.penalize_range)
                             {
@@ -823,7 +834,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                  input_data.ncols_numeric,
                                                  input_data.Xr.data(),
                                                  input_data.Xr_ind.data(),
-                                                 input_data.Xr_indptr.data());
+                                                 input_data.Xr_indptr.data(),
+                                                 workspace.buffer_dbl2.data());
                         else if (!workspace.weights_arr.empty())
                             workspace.this_gain =
                                 eval_guided_crit_weighted<typename std::remove_pointer<decltype(input_data.Xc)>::type,
@@ -845,7 +857,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                           input_data.Xr.data(),
                                                           input_data.Xr_ind.data(),
                                                           input_data.Xr_indptr.data(),
-                                                          workspace.weights_arr);
+                                                          workspace.weights_arr,
+                                                          workspace.buffer_dbl2.data());
                         else
                             workspace.this_gain =
                                 eval_guided_crit_weighted<typename std::remove_pointer<decltype(input_data.Xc)>::type,
@@ -867,7 +880,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                           input_data.Xr.data(),
                                                           input_data.Xr_ind.data(),
                                                           input_data.Xr_indptr.data(),
-                                                          workspace.weights_map);
+                                                          workspace.weights_map,
+                                                          workspace.buffer_dbl2.data());
                     }
 
                     if (std::isnan(workspace.this_gain) || workspace.this_gain <= -HUGE_VAL)
@@ -959,7 +973,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                                   workspace.buffer_dbl.data(), trees.back().chosen_cat, workspace.this_split_categ.data(),
                                                                   workspace.buffer_chr.data(), workspace.criterion, model_params.min_gain,
                                                                   model_params.all_perm, model_params.missing_action, model_params.cat_split_type,
-                                                                  workspace.weights_arr);
+                                                                  workspace.weights_arr,
+                                                                  workspace.buffer_ldbl.data());
                                 else
                                     workspace.this_gain =
                                         eval_guided_crit_weighted<decltype(workspace.weights_map), ldouble_safe>(
@@ -970,8 +985,9 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                                   workspace.buffer_dbl.data(), trees.back().chosen_cat, workspace.this_split_categ.data(),
                                                                   workspace.buffer_chr.data(), workspace.criterion, model_params.min_gain,
                                                                   model_params.all_perm, model_params.missing_action, model_params.cat_split_type,
-                                                                  workspace.weights_map);
-                                
+                                                                  workspace.weights_map,
+                                                                  workspace.buffer_ldbl.data());
+
                                 if (std::isnan(workspace.this_gain) || workspace.this_gain <= -HUGE_VAL)
                                     goto terminal_statistics;
 
@@ -1041,7 +1057,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                                   workspace.buffer_dbl.data(), trees.back().chosen_cat, trees.back().cat_split.data(),
                                                                   workspace.buffer_chr.data(), workspace.criterion, model_params.min_gain,
                                                                   model_params.all_perm, model_params.missing_action, model_params.cat_split_type,
-                                                                  workspace.weights_arr);
+                                                                  workspace.weights_arr,
+                                                                  workspace.buffer_ldbl.data());
                                 else
                                     workspace.this_gain =
                                         eval_guided_crit_weighted<decltype(workspace.weights_map), ldouble_safe>(
@@ -1052,7 +1069,8 @@ void split_itree_recursive(std::vector<IsoTree>     &trees,
                                                                   workspace.buffer_dbl.data(), trees.back().chosen_cat, trees.back().cat_split.data(),
                                                                   workspace.buffer_chr.data(), workspace.criterion, model_params.min_gain,
                                                                   model_params.all_perm, model_params.missing_action, model_params.cat_split_type,
-                                                                  workspace.weights_map);
+                                                                  workspace.weights_map,
+                                                                  workspace.buffer_ldbl.data());
 
                                 if (std::isnan(workspace.this_gain) || workspace.this_gain <= -HUGE_VAL)
                                     goto terminal_statistics;
